@@ -1,69 +1,57 @@
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f8f8f8;
-  margin: 0;
-  padding: 0;
+import React, { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import './App.css';
+
+function App() {
+  const [activities, setActivities] = useState([]);
+
+  useEffect(() => {
+    async function fetchActivities() {
+      const { data, error } = await supabase.from('activities').select('*');
+      if (!error) {
+        setActivities(data);
+      } else {
+        console.error('Error fetching activities:', error);
+      }
+    }
+    fetchActivities();
+  }, []);
+
+  return (
+    <div className="container">
+      <h2>🎉 My Activities</h2>
+      <div className="grid">
+        {activities.map((activity) => (
+          <ActivityCard key={activity.id} activity={activity} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
-.container {
-  padding: 40px;
+function ActivityCard({ activity }) {
+  const tags = Array.isArray(activity.tags)
+    ? activity.tags
+    : typeof activity.tags === 'string'
+      ? activity.tags.split(',').map(tag => tag.trim())
+      : [];
+
+  return (
+    <div className="card">
+      <div className="header">
+        <span role="img" aria-label="party">🎉</span>
+        <span className="status">Unknown</span>
+        <span className="price">$</span>
+      </div>
+      <h3>{activity.title}</h3>
+      <div className="tags">
+        {tags.map((tag, index) => (
+          <span key={index} className="tag">{tag}</span>
+        ))}
+        {activity.points && <span className="tag points">+{activity.points}</span>}
+      </div>
+    </div>
+  );
 }
 
-h2 {
-  margin-bottom: 20px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #666;
-}
-
-.status, .price {
-  background: #f3f3f3;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tag {
-  background: #f3e8ff;
-  color: #6b21a8;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.points {
-  background: #e2e8f0;
-  color: #2d3748;
-}
+export default App;
